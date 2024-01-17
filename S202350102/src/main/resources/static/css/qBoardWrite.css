@@ -1,0 +1,88 @@
+.main {
+	border: 0px solid red;
+	display: flex; align-items: center; justify-content: center;
+	width: 100%; height: 1300px;
+}
+
+.main > .brd {
+	border: 0px solid black;
+	display: flex; align-items: center; justify-content: center;
+	width: 80%; height: 1200px; border-radius: 10px;
+	
+}
+
+.main > .brd > .brd-tb {
+	border: 0px solid green;
+	display: flex; align-items: center; justify-content: center;
+	width: 90%; height: 1200px; margin-top: 100px;
+}
+tbody {
+	width: 100%; height: 1200px; border: 0px solid blue;
+	text-align: center;
+}
+.brd-title {
+	height: 80px; width: 80%; position: relative;
+}
+.brd-title td:nth-child(1) {
+	width: 20%; border: 1px solid black;
+}
+.brd-title td:nth-child(2) {
+	width: 75%; position: absolute;
+}
+.brd-title input[type="text"] {
+	width: 100%; height: 80px; margin-top: -1px;
+	font-size: 1.8em; background: #ccc;
+	border: 1px solid black;
+}
+.brd-line {
+	height: 10px; border-bottom: 0 solid red;
+}
+.brd-option {
+	height: 80px; width: 80%;
+}
+.brd-option td:nth-child(1) {
+	width: 25%; border: 1px solid black;
+}
+.brd-option td:nth-child(2) {
+	width: 25%; border: 1px solid black;
+}
+.brd-option input[type="file"] {
+	width: 100%; margin-left: 5px;
+}
+.brd-option td:nth-child(3) {
+	width: 25%; border: 1px solid black;
+}
+.brd-option td:nth-child(4) {
+	width: 25%; border: 1px solid black;
+}
+.brd-conts {
+	border-bottom: 0px solid black; position: relative;
+	width: 80%; height: 400px; background: #ccc;
+}
+.brd-conts td:nth-child(1) {
+	width: 25%; border: 1px solid black;
+}
+.brd-conts td:nth-child(2) {
+	width: 75%; position: absolute;
+}
+.brd-conts textarea {
+	width: 100%; height: 400px; margin-top: -1px;
+}
+.brd-btn {
+	width: 80%; height: 20px; position: relative;
+	display: flex; align-items: center; justify-content: center;
+}
+.brd-btn input[type="submit"] {
+	position: absolute; margin-left: 200px; border: 1px solid black; color: black;
+	width: 200px; height: 50px; background: #ccc;
+}
+.brd-btn input[type="submit"]:hover {
+	opacity: 0.7; color: white; background: black;
+}
+.brd-btn input[type="button"] {
+	position: absolute; margin-left: 420px; border: 1px solid black; color: black;
+	width: 200px; height: 50px; background: #ccc;
+}
+.brd-btn input[type="button"]:hover {
+	opacity: 0.7; color: white; background: black;
+}

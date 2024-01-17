@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "//mybatis.org/DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.oracle.S202350102.chBoardMapper">
+	<select id="noticeCount" parameterType="int" resultType="int">
+		Select COUNT(*)
+		From   board 
+		Where brd_md= #{brd_md}
+		and   brd_lg= 700 
+	</select>
+	
+	<select id="noticeList" parameterType="Board" resultType="Board">
+		
+		Select *
+		FROM	(Select rownum rn, b.brd_num, u.nick, b.title, b.reg_date, b.user_num, b.view_cnt
+				From board b, user1 u
+				Where brd_md= #{brd_md}
+				and   brd_lg=700
+				and   b.user_num = u.user_num
+				Order By b.reg_date DESC)
+		Where rn Between #{start} and #{end}
+	</select>
+	
+	<insert id="noticeWrite" parameterType="Board">
+		Insert Into board
+			(brd_num, user_num, brd_lg, brd_md, title, conts, view_cnt, reg_date, brd_group, brd_step, img)
+		values
+			(BRD_NUM_SEQ.nextval, #{user_num}, 700, #{brd_md}, #{title}, #{conts}, 0, sysdate, BRD_NUM_SEQ.CURRVAL, 0, #{img})
+	</insert>
+	
+	<select id="noticeCont" parameterType="int" resultType="Board">
+		Select b.*, u.nick
+		From board b, user1 u
+		Where b.brd_num = #{brd_num}
+		and b.user_num = u.user_num	
+	</select>
+	
+	<update id="noticeUpdate" parameterType="Board">
+		Update board 
+		set title = #{title}, conts=#{conts} 
+		<if test="delStatus == 1">			
+				, img = #{img , jdbcType=VARCHAR}			
+		</if>
+		<if test="img != null">, img = #{img}</if>
+		Where brd_num = #{brd_num}
+	</update>
+	
+	<delete id="deleteNotice" parameterType="int">
+		Delete board
+		Where brd_num = #{brd_num}
+	</delete>
+	
+	<update id="noticeViewUp">
+		Update board
+		Set view_cnt = view_cnt+1
+		Where brd_num = #{brd_num}
+	</update>
+	
+	<select id="popBoardList" resultType="Board">
+		Select rownum, a.*, u.nick, replyCount(a.brd_num) replyCount
+		From (Select *
+		        From board 
+		        Where brd_num = brd_group
+		        and brd_lg = 700
+		        and brd_md = 103
+		        and view_cnt is not null
+		        ORDER by view_cnt desc) a, user1 u           
+		Where u.user_num = a.user_num
+		and rownum BETWEEN 1 and 5
+	</select>
+	
+	<select id="popShareList" resultType="Board">
+		Select rownum rn, a.*
+		From (select brd.*, count_like(brd.brd_num) as like_cnt, likeyn(brd.brd_num, #{user_num}) AS likeyn
+		        From   board brd
+		        Where brd.brd_md = 102
+		        and brd.brd_lg = 700
+		        ORDER BY like_cnt desc) a
+		Where rownum BETWEEN 1 and 5
+	</select>
+	
+	
+	<select id="BrdResult" parameterType="Board" resultType="Board">		
+		Select a.*
+		FROM	(SELECT rownum rn, b.*, user1.nick, replyCount(b.brd_num) replyCount
+		        FROM board b
+		        JOIN user1 ON b.user_num = user1.user_num
+		        WHERE b.brd_md = 103
+		        and b.brd_lg = 700
+		        AND	  b.brd_Group = b.brd_num
+		        AND   (b.title like '%' || #{keyword} || '%' 
+		        	Or user1.nick like '%' || #{keyword} || '%')
+		        ORDER BY b.reg_date DESC) a
+        left join (Select Count(*), brd_num
+			  From board_like
+			  Group By brd_num) c on a.brd_num = c.brd_num
+		Where a.rn BETWEEN #{start} and #{end}
+	</select>
+	
+	<select id="shrResult" parameterType="Board" resultType="Board">
+		Select bbb.rn, bbb.*, replyCount(bbb.brd_num) replyCount, count_like(bbb.brd_num) as like_cnt, likeyn(bbb.brd_num, #{user_num}) AS likeyn
+		From (Select rownum rn, bb.*
+		        From (SELECT b.*, user1.nick 
+		                FROM board b
+		                JOIN user1 ON b.user_num = user1.user_num
+		                WHERE b.brd_md = 102
+		                and b.brd_lg = 700
+		                AND	  b.brd_Group = b.brd_num
+		                AND  (b.title like '%' || #{keyword} || '%' 
+					        	Or user1.nick like '%' || #{keyword} || '%'
+					        	Or b.addr like '%' || #{keyword} || '%')
+		                ORDER BY b.reg_date DESC) bb) bbb
+		<if test="start >= 1"> Where bbb.rn BETWEEN #{start} and #{end}</if>		
+		
+	</select>
+	
+	<select id="chgSrchBTot" parameterType="Board" resultType="int">
+	SELECT Count(*)
+	FROM board b
+	JOIN user1 ON b.user_num = user1.user_num
+	WHERE b.brd_md = #{brd_md}
+	and b.brd_lg = 700	
+	AND	  b.brd_Group = b.brd_num
+	<if test="keyword != null">
+	AND   (b.title like '%' || #{keyword} || '%' 
+		   Or user1.nick like '%' || #{keyword} || '%'
+		   <if test="brd_md == 102">
+		   Or b.addr like '%' || #{keyword} || '%'
+		   </if>)
+	</if>
+	
+	</select>
+	
+	<select id="alarmchk" parameterType="int" resultType="BoardReChk">
+		Select a.*, b.title, b.brd_md, b.user_num, b.chg_id
+		From (Select count(*) new_Cmt, brd_num
+		        From   board_re_chk
+		        where  send_date= 1
+		        and user_num = #{user_num}
+		        GROUP BY brd_num)a, board b
+		Where a.brd_num = b.brd_num
+	</select>
+	
+	
+	
+	<select id="myCertiList" parameterType="int" resultType="Board">
+		SELECT rownum, b.*, u.nick, c.title chg_title, replyCount(b.brd_num) replyCount
+		FROM board  b
+		JOIN user1 u On b.user_num = u.user_num
+		JOIN challenge  c ON b.chg_id = c.chg_id
+		WHERE b.user_num = #{user_num}
+		AND b.brd_md = 100
+		and b.brd_lg = 700
+		and b.brd_step = 0
+		ORDER BY b.reg_date DESC
+		between rn 1 and 5
+	</select>
+	
+	<select id="myReviewList" parameterType="int" resultType="Board">
+		SELECT b.*, u.nick, c.title chg_title, replyCount(b.brd_num) replyCount
+		FROM board  b
+		JOIN user1 u On b.user_num = u.user_num
+		JOIN challenge  c ON b.chg_id = c.chg_id
+		WHERE b.user_num = #{user_num}
+		AND b.brd_md = 101
+		and b.brd_lg = 700
+		and b.brd_step = 0
+		ORDER BY b.reg_date DESC
+	</select>
+	
+	<select id="myShareList" parameterType="int" resultType="Board">
+		SELECT b.*, u.nick, replyCount(b.brd_num) replyCount
+		FROM board  b
+		JOIN user1 u On b.user_num = u.user_num
+		WHERE b.user_num = #{user_num}
+		AND b.brd_md = 102
+		and b.brd_step = 0
+		and b.brd_lg = 700
+		ORDER BY b.reg_date DESC
+	</select>
+	
+	<select id="myCommuList" parameterType="Board" resultType="Board">
+		Select c.*
+		From (Select rownum rn, a.*
+		       from    (SELECT  b.*, u.nick, replyCount(b.brd_num) replyCount
+		                FROM board  b
+		                JOIN user1 u On b.user_num = u.user_num
+		                WHERE b.user_num = #{user_num}
+		                AND b.brd_md = #{brd_md}
+		                and b.brd_step = 0
+		                and b.brd_lg = 700
+		                ORDER BY b.reg_date DESC) a) c
+		Where rn BETWEEN #{start} and #{end}           
+	</select>
+	
+	<update id="readAlarm" parameterType="BoardReChk">
+		Update BOARD_RE_CHK
+		Set SEND_DATE = 2, read_date=sysdate
+		Where user_num = #{user_num}
+		AND brd_num = #{brd_num}
+	</update>
+	
+	<update id="moveToNewCmt" parameterType="BoardReChk">
+		Update BOARD_RE_CHK
+		Set SEND_DATE = 2, read_date=sysdate
+		Where user_num = #{user_num}
+		AND brd_num = #{brd_num}
+	</update>
+	
+	<select id="myCount" parameterType="int" resultType="com.oracle.S202350102.service.hbService.Paging">
+		Select count(*) total, brd_md
+		From board
+		Where user_num = #{user_num}
+		and brd_lg = 700
+		and brd_num = brd_Group 
+		Group BY brd_md
+	</select>
+	
+	<select id="mychgBoardList" parameterType="Board" resultType="Board">
+		Select d.*       
+		From       (Select rownum rn, a.*
+		             From    (Select b.*, u.nick, c.title chg_title, replyCount(b.brd_num) replyCount
+								FROM board b
+								JOIN User1 u ON b.user_num = u.user_num
+								JOIN challenge c ON b.chg_id = c.chg_id
+								Where b.brd_md = #{brd_md}
+								and b.user_num = #{user_num}
+								and b.brd_group = b.brd_num
+								and b.brd_lg = 700
+								ORDER by b.reg_date DESC) a ) d
+		Where rn BETWEEN #{start} and #{end}
+	</select>
+	
+	<select id="userTot" parameterType="Board" resultType="int">
+		Select Count(*)
+		From board
+		Where user_num = #{user_num}
+		and brd_md = #{brd_md}
+		and brd_lg = 700
+		and brd_step =0
+	</select>
+	
+	<update id="readAllcmt" parameterType="int">
+		Update board_re_chk
+		set send_date = 2, read_date = sysdate
+		WHere user_num = #{user_num}
+	</update>
+	
+	<insert id="commentAlarm" parameterType="int">
+		{
+			call COMMENT_ALARM(#{brd_num, mode=IN,	jdbcType=INTEGER})
+		}	
+	</insert>
+	
+</mapper>

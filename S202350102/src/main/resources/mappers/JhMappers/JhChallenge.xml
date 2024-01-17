@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "//mybatis.org/DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.oracle.S202350102.JhChallengMapper">
+	<resultMap id="RecommendChg" type="Challenge">
+	    <id property="chg_id" column="chg_id"/>
+	    <result property="title" column="title"/>
+	    <result property="thumb" column="thumb"/>
+	</resultMap>
+
+	<!-- 챌린지 상세정보 챌린지 테이블, 유저테이블, 공통 테이블 한번에 조인 -> 챌린지 상세정보, 닉네임, 카테고리명, 챌린지 진행상테 조회  -->
+	<select id="jhChgDetail" parameterType="int" resultType="Challenge">
+		SELECT u.nick, u.user_id userId, u.user_name userName, ct.ctn ctn, cs.ctn stateCtn, cr.ctn returnReason, ch.*, count_pick(#{chg_id}) pick_cnt
+		FROM challenge ch 
+		INNER JOIN user1 u ON ch.user_num = u.user_num
+		INNER JOIN comm ct ON ch.chg_lg   = ct.lg   AND ch.chg_md 	= ct.md
+		INNER JOIN comm cs ON ch.state_lg = cs.lg   AND ch.state_md = cs.md
+		LEFT JOIN comm cr ON ch.return_lg = cr.lg AND ch.return_md = cr.md
+		WHERE ch.chg_id = #{chg_id}
+	</select>
+	
+	<!--챌린지 후기 총 갯수  보드로 옮김 -->
+<!-- 	<select id="jhReviewTotal" parameterType="int" resultType="int">
+		SELECT 	COUNT(*)
+		FROM 	board b
+		INNER JOIN challenge c ON b.chg_id = c.chg_id
+		WHERE 	brd_lg = 700
+		AND 	brd_md = 101
+		AND 	c.chg_id = #{chg_id}
+		AND 	brd_step = 0
+	</select> -->
+	
+	<!-- 챌린지 후기 리스트  보드로 옮김-->
+<!-- 	<select id="jhChgReviewList" parameterType="Board" resultType="Board">
+		SELECT * 
+		FROM (
+		        SELECT  ROWNUM AS rn, a.* 
+		        FROM    (
+		                    SELECT      b.brd_num , b.title, b.user_num, u.nick, b.view_cnt, b.reg_date, replyCount(b.brd_num) replyCount
+		                    FROM 		board b
+		                    INNER JOIN 	user1 u      ON b.user_num = u.user_num
+		                    INNER JOIN 	challenge ch ON b.chg_id   = ch.chg_id
+		                    WHERE 		ch.chg_id   = #{chg_id}
+		                    AND 		brd_lg     	= 700
+		                    AND 		brd_md    	= 101
+		                    AND 		b.brd_step 	= 0
+		                    ORDER BY 	b.brd_num DESC) a
+		)
+		WHERE rn BETWEEN #{start} AND #{end}  
+	</select> -->
+	
+	<!-- 필요한가? -->
+	<select id="jhUserStatus" parameterType="int" resultType="java.lang.String">
+		SELECT 	c.ctn
+		FROM 	user1 u
+		INNER JOIN comm c ON u.status_lg = c.lg AND u.status_md = c.md
+		WHERE 	u.user_num = #{user_num}
+	</select>
+
+	<!-- 조회수 올리기 보드로-->
+<!-- 	<update id="jhViewCntUp" parameterType="int">
+		UPDATE board
+		SET    view_cnt = view_cnt+1
+		WHERE  brd_num  = #{brd_num}
+	</update> -->
+
+	<!-- 후기 내용  보드 매퍼로 옮김-->
+	<!-- <select id="jhReviewContent" parameterType="int" resultType="Board">
+		SELECT  b.brd_num, b.title, b.conts, b.img, b.reg_date, u.user_num, u.nick, b.view_cnt, replyCount(b.brd_num) replyCount
+		FROM 	board b
+		INNER JOIN user1 u ON b.user_num = u.user_num
+		WHERE 	b.brd_num = #{brd_num}
+	</select> -->
+	
+	<!-- 후기 댓글 리스트 보드로 -->
+	<!-- <select id="jhReviewReplyList" parameterType="Board" resultType="Board">
+		SELECT * 
+		FROM (
+				SELECT 	 ROWNUM AS rn, a.*
+				FROM	(
+						SELECT	 b.brd_num, b.conts, b.reg_date, u.user_num, u.nick
+						FROM 	 board b
+						INNER JOIN user1 u ON b.user_num = u.user_num
+						WHERE 	 b.brd_group = #{brd_num}
+						AND 	 b.brd_step > 0
+						ORDER BY b.brd_num DESC ) a
+		) WHERE rn BETWEEN #{start} AND #{end} 
+	</select> -->
+	
+	<!-- 후기 댓글 입력  보드로-->
+	<!-- <select id="jhReplyInsertPro" parameterType="Board" statementType="CALLABLE" >
+		{
+			call Challenge_Review_Insert_Proc(
+						 #{brd_num , 	mode=IN , jdbcType=INTEGER}
+						,#{chg_id , 	mode=IN , jdbcType=INTEGER}
+						,#{user_num, 	mode=IN , jdbcType=INTEGER}
+						,#{conts , 		mode=IN , jdbcType=VARCHAR}
+						,#{resultCount, mode=OUT, jdbcType=INTEGER}
+						)
+		}
+		
+	</select> -->
+	
+	<!-- 후기랑 댓글 수정 삭제 하나의 쿼리에 조건문 주고 가능한지 생각해보기 -->
+	<!-- 후기 댓글 삭제  보드로-->
+	<!-- <delete id="jhReplyDelete" parameterType="int">
+		DELETE 	FROM board
+		WHERE 	brd_num = #{brd_num}
+	</delete> -->
+	
+	<!-- 후기 댓글 수정-->
+	<!-- <update id="jhReplyUpdate" parameterType="Board">
+		UPDATE board
+		SET    conts = #{conts}, reg_date = SYSDATE
+		WHERE  brd_num = #{brd_num}
+	</update>
+	 -->
+
+	<!-- 후기 입력 -->
+<!-- 	<insert id="jhReviewPost" parameterType="Board" >
+		INSERT INTO board (brd_num, chg_id, user_num, brd_lg, brd_md, title, conts, img, reg_date , brd_group, brd_step)
+		VALUES (brd_num_seq.NEXTVAL, #{chg_id}, #{user_num}, 700, 101, #{title}, #{conts}, #{img}, SYSDATE, brd_num_seq.NEXTVAL, 0)
+	</insert> -->
+	
+	<!-- 후기 수정 -->
+<!-- 	<update id="jhReviewUpdate" parameterType="Board">
+      UPDATE  board
+      SET     title = #{title} 
+            , conts = #{conts} 
+            , img = 
+        	  <choose>
+            	<when test="img != null and !img.equals('')">
+                	#{img}
+            	</when>
+              	<otherwise>
+                	null
+            	</otherwise>
+        	  </choose>
+            , reg_date = SYSDATE   
+      WHERE   brd_num = #{brd_num}
+   </update> -->
+	
+	<!-- 후기 삭제 -> 댓글도 같이 삭제 되게 할 것인가? -->
+	<!-- <delete id="jhReviewDelete" parameterType="int">
+		DELETE	FROM board
+		WHERE 	brd_num = #{brd_num}
+		OR		brd_group = #{brd_num}
+	</delete> -->
+	
+	<!-- 후기 이미지 삭제  필요한가? -->
+<!-- 	<update id="jhBoardImgDelete" parameterType="int">
+		UPDATE  board
+		SET 	img = null
+		WHERE	brd_num = #{brd_num}
+	</update> -->
+	
+	<!-- 추천 챌린지 -->
+	<select id="jhRecommendChgList" parameterType="int" resultMap="RecommendChg">
+		SELECT * 
+		FROM (
+		        SELECT  ROWNUM AS rn, a.* 
+		        FROM    (
+		                    SELECT      chg_id, thumb, title
+		                    FROM        challenge
+		                    WHERE       chg_md = #{chg_md}
+		                    AND			state_md = 102
+		                    ORDER BY    create_date desc
+		                ) a
+		)
+		WHERE rn BETWEEN 1 AND 10 
+	</select>
+
+	<!-- 카테고리 가져오기 -->	
+	<select id="jhCategory" parameterType="int" resultType="Comm">
+	    <![CDATA[
+	    SELECT lg, md, ctn
+	    FROM comm
+	    WHERE lg = #{lg} AND md != 999
+	    ]]>
+	</select>
+	
+	<!-- 챌린지 신청 -->
+	<insert id="jhChgApplication" parameterType="Challenge" >
+	INSERT INTO challenge (	chg_id, 
+							user_num, 
+							chg_lg, 
+							chg_md, 
+							title, 
+							chg_capacity, 
+							chg_conts, 
+							state_lg, 
+							state_md,
+                        	upload, 
+                        	sample_img, 
+                        	freq, 
+                        	chg_public, 
+                        	priv_pswd, 
+                        	thumb, 
+                        	reg_date, 
+                        	end_date
+                        	)
+	VALUES (chg_id_seq.nextval, 
+			#{user_num}, 
+			#{chg_lg}, 
+			#{chg_md}, 
+			#{title}, 
+			#{chg_capacity}, 
+			#{chg_conts},
+        	#{state_lg}, 
+        	#{state_md}, 
+        	#{upload}, 
+        	#{sample_img}, 
+        	#{freq}, 
+        	#{chg_public}, 
+        	<choose>
+      			<when test="chg_public == 0">
+        			null,
+      			</when>
+      			<otherwise>
+        			#{priv_pswd},
+      			</otherwise>
+    		</choose> 
+        	#{thumb}, 
+        	sysdate, 
+        	#{end_date}
+        	)
+	</insert>
+	
+	
+	<!-- 신청 반려 챌린지 리스트 -->
+	<select id="jhChgAplList" parameterType="Challenge" resultType="Challenge">
+		SELECT * 
+		FROM (
+		        SELECT rownum rn, chg.*
+		        FROM (
+		                    SELECT  u.nick, u.user_id userId, u.user_name, ch.*, cc.ctn ctn, cs.ctn stateCtn
+		                    FROM    challenge ch
+		                    INNER JOIN user1 u ON ch.user_num = u.user_num
+		                    INNER JOIN comm cc ON ch.chg_lg = cc.lg AND ch.chg_md = cc.md
+		                    INNER JOIN comm cs ON ch.state_lg = cs.lg   AND ch.state_md = cs.md
+		                    WHERE  
+		                    <choose>
+		                    	<when test="state_md == 100"> ch.state_md = 100</when>
+		                    	<when test="state_md == 104"> ch.state_md = 104</when>
+		                    </choose>
+		                    
+           				    <if test= "keyword != null and keyword != ''"> 
+								AND (title   	LIKE '%' || #{keyword} || '%'	
+								OR  chg_conts 	LIKE '%' || #{keyword} || '%')
+						 	</if>
+		                    
+		                    <choose>
+		                    	<when test="chg_md == 100"> AND ch.chg_md = 100 </when>
+		                    	<when test="chg_md == 101"> AND ch.chg_md = 101 </when>
+		                    	<when test="chg_md == 102"> AND ch.chg_md = 102 </when>
+		                    	<when test="chg_md == 103"> AND ch.chg_md = 103 </when>
+		                    </choose>
+		                    ORDER  BY ch.reg_date desc
+		             ) chg
+		      ) WHERE rn BETWEEN #{start} AND #{end} 
+	</select>
+	
+	<!-- 신청 챌린지 수 -->
+	<select id="jhChgListTotal" parameterType="Challenge" resultType="int">
+		SELECT  COUNT(*)
+		FROM challenge
+		WHERE state_lg = 300
+		AND state_md = #{state_md}
+		<choose>
+			<when test="chg_md != 0"> AND chg_md = #{chg_md} </when>
+		</choose>
+		<if test='keyword != null and keyword != ""'> 
+			AND (title   	LIKE '%' || #{keyword} || '%'	
+			OR  chg_conts 	LIKE '%' || #{keyword} || '%')
+		</if>
+	</select>
+	
+		<!-- 챌린지 승인(챌린저에 개설자 추가) / 반려 -->
+	<select id="jhApprovReturnPro" parameterType="java.util.Map" statementType="CALLABLE" >
+		{
+			call Chg_Approval_Return_Pro(
+						 #{chg_id , 		mode=IN , jdbcType=INTEGER}
+						,#{user_num, 		mode=IN , jdbcType=INTEGER}
+						,#{approvReturn, 	mode=IN , jdbcType=INTEGER}
+						,#{return_md , 		mode=IN , jdbcType=VARCHAR}
+						,#{resultCount, 	mode=OUT, jdbcType=INTEGER}
+						)
+		}
+		
+	</select>
+	
+	<!-- 챌린지 승인 반려 성공 여부 가져오기 위함 -->
+	<resultMap id="resultMap" type="java.util.Map">
+    	<result property="resultCount" column="resultCount" jdbcType="INTEGER"/>
+	</resultMap>
+	
+	
+	<update id="jhChgAdminUpdate" parameterType="Challenge" >
+		Update Challenge
+		Set   title = #{title} 
+			, chg_capacity = #{chg_capacity} 
+			, chg_conts = #{chg_conts}
+			, chg_md = #{chg_md}
+           	, upload = #{upload} 
+           	<if test="sample_img != null">, sample_img = #{sample_img}</if> 
+           	, freq = #{freq} 
+           	, chg_public = #{chg_public} 
+           	, priv_pswd = 
+	           	<choose> 
+	           		<when test="priv_pswd != null and !priv_pswd.equals('')">
+	           			#{priv_pswd}
+	           		</when>
+	           		<otherwise>
+	           			null
+	           		</otherwise>
+	           	</choose>
+           	, thumb = 
+	           	<choose>
+	            	<when test="thumb != null and !thumb.equals('')">
+	                	#{thumb}
+	            	</when>
+	              	<otherwise>
+	                	null
+	            	</otherwise>
+	        	</choose>          	
+           	, end_date = #{end_date}
+        Where chg_id = #{chg_id}
+	</update>
+	
+	
+	<delete id="jhChgDelete" parameterType="int">
+		DELETE 	FROM  Challenge
+		WHERE 	chg_id = #{chg_id}
+	</delete>
+	
+	<select id="jhChgStateMd" parameterType="int" resultType="int">
+		SELECT  state_md
+		FROM    challenge
+		WHERE   chg_id = #{chg_id}
+	</select>
+	
+	
+	
+	
+<!-- 삭제 예정	챌린지 관리자 리스트 - 카테고리별 + 진행상태별 한번에 처리하기 위함
+	<select id="jhChgAdminList" parameterType="Challenge" resultType="Challenge">
+	챌린저 수, 좋아요 수도 가져오기
+		SELECT  *
+		FROM    (   SELECT  ROWNUM AS rn, chgCtg.* 
+		            FROM    (
+		                        SELECT      *
+		                        FROM        challenge
+		                        WHERE       chg_lg = #{chg_lg}
+		                        
+		                        AND         chg_md != 999
+		                        AND         chg_md = #{chg_md}
+		                        ORDER BY 	reg_date desc
+		                     )chgCtg
+		            WHERE   state_lg = 300
+		            AND     state_md != 999
+		            AND     state_md = 100
+		) WHERE rn BETWEEN 1 AND 10  
+	</select> -->
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 챌린지 목록 관련 미완 -->
+	
+	
+	<select id="jhChgPickList" parameterType="Challenge" resultType="Challenge">
+		SELECT * 
+		FROM (
+				SELECT ROWNUM AS rn, chg_id, chg_lg, chg_md, title, chg_capacity, state_lg, state_md, pick_cnt, chg_public, priv_pswd, thumb, create_date, start_date, end_date
+				FROM challenge
+				WHERE state_lg = 300
+				AND state_md = #{state_md}
+				ORDER BY 	pick_cnt desc
+			 )
+		WHERE rn BETWEEN #{start} AND #{end}  
+	</select>
+	
+
+
+
+
+
+
+	
+</mapper> 

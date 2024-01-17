@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oracle.S202350102.ThChgMapper">
+
+	<select id="thChgTotal" resultType="int">
+		SELECT 	COUNT(*) 
+		FROM 	challenge
+	</select>
+	
+	<select id="thChgTotalIng" parameterType="Challenge" resultType="int">
+		SELECT 	COUNT(*) 
+		FROM 	challenge
+		WHERE	state_lg = 300
+		AND		state_md = 102
+		<choose>
+			<when test="chg_lg == 200">		AND chg_md = #{chg_md}</when>
+		</choose>
+		<!-- keyword 값이 null이 아니고 공백도 아닐때,  -->
+		<if test='keyword != null and keyword != ""'> 
+			AND (title   	LIKE '%' || #{keyword} || '%'	
+			OR  chg_conts 	LIKE '%' || #{keyword} || '%')
+		</if>
+
+	</select>
+
+	<select id="thChgTotalFin" parameterType="Challenge" resultType="int">
+		SELECT 	COUNT(*) 
+		FROM 	challenge
+		WHERE	state_lg = 300
+		AND		state_md = 103
+		<choose>
+			<when test="chg_lg == 200">		AND chg_md = #{chg_md}</when>
+		</choose>
+		<!-- keyword 값이 null이 아니고 공백도 아닐때,  -->
+		<if test='keyword != null and keyword != ""'> 
+			AND (title   	LIKE '%' || #{keyword} || '%'	
+			OR  chg_conts 	LIKE '%' || #{keyword} || '%')
+		</if>
+	</select>
+	
+	<!--진행중 챌린지 조회 (choose: null(기본값), 개설일 순, 찜 순, 참가자 순 -->
+	<select id="thChgListAll" parameterType="Challenge" resultType="Challenge">
+		SELECT chl.*	, count_challenger(chl.chg_id) 		AS chlgerCnt		<!-- 참여자 수  -->
+			           	, pickyn(chl.chg_id,#{my_user_num}) AS pickyn			<!-- 회원별  찜 여부-->
+			           	, count_pick(chl.chg_id) 			AS pick_cnt			<!-- 챌린지별 찜수 -->
+			           	, sel_nick(chl.user_num) 			AS nick				<!-- 작성자 닉네임 -->
+			           	, sel_user_name(chl.user_num) 		AS userName			<!-- 작성자 이름 -->
+			           	, ctn_by_chg_id(chl.chg_lg,chg_md) 	AS ctn				<!-- 챌린지별 카테고리 -->
+			           	, sel_user_id(chl.user_num)			AS userId			<!-- 작성자 아이디 -->
+		FROM 
+		(
+			SELECT rownum rn, a.*
+			FROM
+				(SELECT		* 
+				 FROM 		challenge c
+				 WHERE 		c.state_lg = 300
+				 <choose>
+				 	<when test="state_md == 0">		AND c.state_md = 102</when>
+				 	<when test="state_md == 102">	AND c.state_md = 102</when>
+				 	<when test="state_md == 103">	AND c.state_md = 103</when>
+				 </choose>
+				 		
+				 <choose>
+				 	<when test="chg_lg == 200">		AND c.chg_md = #{chg_md}</when>
+				 </choose>
+				 <if test= "keyword != null and keyword != ''"> 
+					AND (title   	LIKE '%' || #{keyword} || '%'	
+					OR  chg_conts 	LIKE '%' || #{keyword} || '%')
+				 </if>
+				 
+				 <choose>
+				 	<when test="sortOpt ==  null">			ORDER BY 	c.create_date  </when>
+				 	<when test="sortOpt == 'create_date'">	ORDER BY 	c.create_date </when>
+				 	<when test="sortOpt == 'pick_cnt'">		ORDER BY 	count_pick(chg_id)</when>
+				 	<when test="sortOpt == 'participants'">	ORDER BY 	( 
+														                    SELECT      COUNT(cr.chg_id) AS cnt
+														                    FROM        challenger cr
+														                    WHERE       cr.chg_id = c.chg_id
+														                    GROUP BY    cr.chg_id
+															            ) </when> 
+				 </choose>
+				 DESC) a
+		) chl
+		WHERE rn BETWEEN #{start} AND #{end}
+	</select>
+	
+	<!-- 챌린지 카테고리 조회 -->
+	<select id="thChgCategoryList" resultType="Comm">
+		SELECT	*
+		FROM	comm
+		WHERE	lg = 200
+		AND		md != 999
+	</select>
+
+</mapper>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oracle.S202350102.YrUser1Mapper">	
+	<select id="yrUser1ListSsj" parameterType="int" resultType="User1">
+		select u.user_num, u.nick, u.img  
+		      , max_reg_date(c1.chg_id, u.user_num) as brd_reg_date
+		from   challenge c1
+		     , challenger c2 
+		     , user1 u
+		where    c1.chg_id = #{chg_id}
+		and      c1.chg_id = c2.chg_id
+		and      c2.user_num = u.user_num
+		order by brd_reg_date
+	</select>
+	
+	<select id="selectFollowingList" parameterType="int" resultType="User1">
+		select f1.user_num as my_user_num, f1.following_id
+		      , (select 1
+		         from following f2
+		         where f1.user_num = f2.following_id
+		         and f1.following_id = f2.user_num
+		        ) matpal
+		        , u.*
+		from following f1, user1 u
+		where f1.user_num = #{user_num}
+		and f1.following_id = u.user_num
+	</select>
+	
+	<select id="selectFollowerList" parameterType="int" resultType="User1">
+		select f1.user_num, f1.following_id
+		      , (select 1
+		         from following f2
+		         where f1.user_num = f2.following_id
+		         and f1.following_id = f2.user_num
+		        ) matpal
+		        , u.*
+		from following f1, user1 u
+		where f1.following_id = #{user_num}
+		and f1.user_num = u.user_num
+	</select>
+</mapper>

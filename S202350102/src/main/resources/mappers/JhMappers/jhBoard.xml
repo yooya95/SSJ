@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "//mybatis.org/DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.oracle.S202350102.JhChallengMapper">
+
+	<!-- 후기 내용 -->
+	<select id="jhReviewContent" parameterType="int" resultType="Board">
+		SELECT  b.brd_num, b.title, b.conts, b.img, b.reg_date, u.user_num, u.nick, u.img as user_img, b.view_cnt, replyCount(b.brd_num) as replyCount
+		FROM 	board b
+		INNER JOIN user1 u ON b.user_num = u.user_num
+		WHERE 	b.brd_num = #{brd_num}
+	</select>
+	
+	<!-- 후기 총 수 -->
+	<select id="jhReviewTotal" parameterType="int" resultType="int">
+		SELECT 	COUNT(*)
+		FROM 	board b
+		INNER JOIN challenge c ON b.chg_id = c.chg_id
+		WHERE 	brd_lg = 700
+		AND 	brd_md = 101
+		AND 	c.chg_id = #{chg_id}
+		AND 	brd_step = 0
+	</select>
+	
+	<!-- 후기 리스트 -->
+	<select id="jhChgReviewList" parameterType="Board" resultType="Board">
+		SELECT * 
+		FROM (
+		        SELECT  ROWNUM AS rn, a.* 
+		        FROM    (
+		                    SELECT      b.brd_num , b.chg_id, b.img, b.title, b.user_num, u.nick, b.view_cnt, b.reg_date, replyCount(b.brd_num) replyCount, u.img as user_img
+		                    FROM 		board b
+		                    INNER JOIN 	user1 u      ON b.user_num = u.user_num
+		                    INNER JOIN 	challenge ch ON b.chg_id   = ch.chg_id
+		                    WHERE 		ch.chg_id   = #{chg_id}
+		                    AND 		brd_lg     	= 700
+		                    AND 		brd_md    	= 101
+		                    AND 		b.brd_step 	= 0
+		                    ORDER BY 	b.brd_num DESC) a
+		)
+		WHERE rn BETWEEN #{start} AND #{end}  
+	</select>
+	
+	<!-- 조회수 올리기 -->
+	<update id="jhViewCntUp" parameterType="int">
+		UPDATE board
+		SET    view_cnt = view_cnt+1
+		WHERE  brd_num  = #{brd_num}
+	</update>
+	
+	
+	<!-- 후기 댓글 리스트 -->
+	<select id="jhReviewReplyList" parameterType="Board" resultType="Board">
+		SELECT * 
+		FROM (
+				SELECT 	 ROWNUM AS rn, a.*
+				FROM	(
+						SELECT	 b.brd_num, b.conts, b.reg_date, u.user_num, u.nick, u.img
+						FROM 	 board b
+						INNER JOIN user1 u ON b.user_num = u.user_num
+						WHERE 	 b.brd_group = #{brd_num}
+						AND 	 b.brd_step > 0
+						ORDER BY b.brd_num DESC ) a
+		) WHERE rn BETWEEN #{start} AND #{end} 
+	</select>
+	
+	
+	<!-- 후기 댓글 입력 -->
+	<select id="jhReplyInsertPro" parameterType="Board" statementType="CALLABLE" >
+		{
+			call Challenge_Review_Insert_Proc(
+						 #{brd_num , 	mode=IN , jdbcType=INTEGER}
+						,#{chg_id , 	mode=IN , jdbcType=INTEGER}
+						,#{user_num, 	mode=IN , jdbcType=INTEGER}
+						,#{conts , 		mode=IN , jdbcType=VARCHAR}
+						,#{resultCount, mode=OUT, jdbcType=INTEGER}
+						)
+		}
+		
+	</select>
+	
+	
+	<!-- 후기 댓글 수정-->
+	<update id="jhReplyUpdate" parameterType="Board">
+		UPDATE board
+		SET    conts = #{conts}, reg_date = SYSDATE
+		WHERE  brd_num = #{brd_num}
+	</update>
+	
+	
+	<!-- 후기랑 댓글 수정 삭제 하나의 쿼리에 조건문 주고 가능한지 생각해보기 -->
+	<!-- 후기 댓글 삭제 -->
+	<delete id="jhReplyDelete" parameterType="int">
+		DELETE 	FROM board
+		WHERE 	brd_num = #{brd_num}
+	</delete>
+	
+	<!-- 후기 입력 -->
+	<insert id="jhReviewPost" parameterType="Board" >
+		INSERT INTO board (
+							brd_num, 
+							chg_id, 
+							user_num, 
+							brd_lg, 
+							brd_md, 
+							title, 
+							conts,
+							<if test="img != null">
+								img,
+							</if>
+		 					reg_date , 
+		 					brd_group, 
+		 					brd_step
+		 				   )
+		VALUES (
+				brd_num_seq.NEXTVAL, 
+				#{chg_id}, 
+				#{user_num}, 
+				700, 
+				101, 
+				#{title}, 
+				#{conts}, 
+				<if test="img != null">
+					#{img},
+				</if>
+				SYSDATE, 
+				brd_num_seq.NEXTVAL, 
+				0
+			   )
+	</insert>
+	
+	<!-- 후기 수정 -->
+	<update id="jhReviewUpdate" parameterType="Board">
+      UPDATE  board
+      SET     title = #{title} 
+            , conts = #{conts} 
+            , img = 
+        	  <choose>
+            	<when test="img != null and !img.equals('')">
+                	#{img}
+            	</when>
+              	<otherwise>
+                	null
+            	</otherwise>
+        	  </choose>
+            , reg_date = SYSDATE   
+      WHERE   brd_num  = #{brd_num}
+   </update>
+   
+   <!-- 후기 삭제 -> 댓글까지 삭제 하기 - 나중에 댓글삭제버전과 후기삭제 버전 합치기 -->
+	<delete id="jhReviewDelete" parameterType="int">
+		DELETE	FROM board
+		WHERE 	brd_group 	= #{brd_num}
+	</delete>
+	
+		<!-- 후기 이미지 삭제  필요한가? 없어도 될듯 -->
+<!-- 	<update id="jhBoardImgDelete" parameterType="int">
+		UPDATE  board
+		SET 	img = null
+		WHERE	brd_num = #{brd_num}
+	</update> -->
+	
+	
+</mapper>

@@ -1,0 +1,71 @@
+server:
+  port: 8222
+  ssl:
+   enabled: true
+   key-store: classpath:keystore.p12  
+   key-store-password: tiger01
+   key-password: tiger01
+   client-auth: NONE
+   protocol: TLS
+    
+# cache
+spring:
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          max-age: 10000s
+          no-cache: false
+          no-store: false
+          must-revalidate: true
+
+  #File Size
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 30MB
+      max-request-size: 10MB
+
+  datasource:
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    url: jdbc:oracle:thin:@3.37.196.20/xe  
+    username: S202350102
+    password: tiger
+
+  # Jpa Setting
+  jpa:
+    show-sql: true
+    # Operation --> create / none
+    hibernate:
+      ddl-auto: update
+  # view Resolver
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+  # gmail Transfer
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: teamssj02@gmail.com
+    password: kfgt ulmx ztmz fxkl
+    properties: 
+      mail:
+        smtp: 
+          auth: true
+          starttls.enable: true
+
+# Mybatis
+#mybatis: # classpath는  resources를 의미함(위치)
+#  mapper-locations: classpath:configuration.xml
+#  config-location: classpath:mappers/*.xml
+
+# Mybatis
+mybatis: 
+  config-location: classpath:configuration.xml
+  mapper-locations: classpath:mappers/**/*.xml
+
+
+logging.level:
+  org.hibernate.sql: debug # logger를 통해 하이버네이트 실행 SQL
+  

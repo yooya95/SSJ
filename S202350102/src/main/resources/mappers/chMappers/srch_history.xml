@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "//mybatis.org/DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.oracle.S202350102.chSrchMapper">
+	<insert id="saveWord" parameterType="SearchHistory">
+		insert into search_history VALUES 
+		(#{user_num}, #{srch_word}, sysdate)
+	</insert>
+	
+	<select id="shList" parameterType="int" resultType="SearchHistory">
+		Select *
+		From search_history
+		Where user_num = #{user_num}
+		Order By srch_date	DESC
+	</select>
+	
+	<update id="updateHis" parameterType="SearchHistory">
+		update search_history
+		Set srch_date = sysdate
+		Where user_num = #{user_num}
+		and	  srch_word = #{srch_word}
+	</update>
+	
+	
+	<delete id="deleteHis" parameterType="SearchHistory">
+		Delete search_history
+		Where user_num = #{user_num}
+		and	  srch_word = #{srch_word}
+	</delete>
+</mapper>

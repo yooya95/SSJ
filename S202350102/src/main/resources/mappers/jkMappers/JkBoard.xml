@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oracle.S202350102.JkBoardMapper">
+
+	<select id="sharing" parameterType="Board" resultType="Board">
+		 SELECT *
+		 FROM (
+		        SELECT ROWNUM AS rn, a.*
+		        FROM (
+		                SELECT b.brd_num, count_like(b.brd_num) as like_cnt, u.user_num, u.user_id, b.title, b.conts, u.nick, b.img, b.view_cnt, b.reg_date, b.price, b.bank_info, b.bank_duedate, b.addr, b.applicants, b.participants, b.user_tel, b.brd_group, b.brd_step, replyCount(b.brd_num) replyCount, b.zipCode
+		                       , likeyn(b.brd_num, #{b_user_num}) AS likeyn
+		                FROM board b, user1 u
+		                WHERE b.user_num = u.user_num
+		                AND b.brd_lg = 700
+		                AND b.brd_md = 102
+		                AND b.brd_step = 0
+		                ORDER BY b.brd_num DESC) a
+		        )
+		 WHERE rn BETWEEN #{start} AND #{end}
+    </select>
+   
+   <select id="sharing2" parameterType="Board" resultType="Board">
+		SELECT b.brd_num, count_like(b.brd_num) as like_cnt, u.user_num, u.user_id, b.title, b.conts, u.nick, b.img, b.view_cnt, b.reg_date, b.price, b.bank_info, b.bank_duedate, b.addr, b.applicants, b.participants, b.user_tel, b.brd_group, b.brd_step, replyCount(b.brd_num) replyCount, b.zipCode
+			   , likeyn(b.brd_num, #{b_user_num}) AS likeyn
+		FROM board b, user1 u
+		WHERE b.user_num = u.user_num
+		AND b.brd_lg = 700
+		AND b.brd_md = 102
+		AND b.brd_step = 0
+    </select>
+   
+    <update id="updateLikeStatus" parameterType="Board">
+	   UPDATE board
+	   SET like_cnt = like_cnt + 1
+	   WHERE brd_num = #{brd_num}
+	</update>
+	
+	<select id="getboardBybrd_num" parameterType="int" resultType="Board">
+	    SELECT b.brd_num, u.user_num, b.title, b.conts, u.nick, b.img, b.view_cnt, b.reg_date, b.price, b.bank_info, b.bank_duedate, b.addr, b.applicants, b.participants, b.user_tel, count_like(b.brd_num) as like_cnt, b.brd_group, b.brd_step
+	    FROM board b, user1 u
+	    WHERE b.user_num = u.user_num
+	    AND b.brd_num = #{brd_num}
+	</select>
+  
+  
+	<insert id="writeFormSharing" parameterType="Board">
+	    INSERT INTO board (brd_num, user_num, brd_lg, brd_md, title, conts, img, view_cnt, reg_date, price, bank_info, bank_duedate, addr, applicants, participants, user_tel, brd_group, brd_step, zipCode)
+	    VALUES (BRD_NUM_SEQ.nextval, #{user_num}, 700, 102, #{title}, #{conts}, #{img}, 0, sysdate, #{price}, #{bank_info}, #{bank_duedate}, #{addr}, #{applicants}, 0, #{user_tel}, BRD_NUM_SEQ.nextval, 0, #{zipCode})
+	  
+	</insert>
+
+	<select id="detailSharing" parameterType="int" resultType="Board">
+    	 SELECT b.brd_num, u.user_num, b.title, b.conts, u.nick, b.img, b.view_cnt, b.reg_date, b.price, b.bank_info, b.bank_duedate, b.addr, b.applicants, b.participants, b.user_tel, count_like(b.brd_num) as like_cnt, b.brd_group, b.brd_step
+    	 FROM board b, user1 u
+    	 Where brd_num =#{brd_num}
+    	 AND b.user_num = u.user_num
+    </select>
+
+	<update id="updateSharing" parameterType="Board">
+	   UPDATE board 
+		SET title = #{title}, 
+		    conts = #{conts},
+		    <if test="img != null">
+		        img = #{img},
+		    </if>
+		    price = #{price}, 
+		    bank_info = #{bank_info}, 
+		    bank_duedate = #{bank_duedate}, 
+		    addr = #{addr}, 
+		    applicants = #{applicants}, 
+		    user_tel = #{user_tel} 
+		WHERE brd_num = #{brd_num}
+
+	</update>
+
+  	<delete id="deleteSharing" parameterType="int">
+    	DELETE FROM board WHERE brd_num = #{brd_num} 
+    </delete>
+    
+    <select id="getPopularPosts" parameterType="String" resultType="Board">
+	    SELECT b.brd_num, u.user_num, b.title, b.conts, u.nick, b.img, b.view_cnt, b.reg_date, b.price, b.bank_info, b.bank_duedate, b.addr, b.applicants, b.participants, b.user_tel, count_like(b.brd_num) as like_cnt, b.brd_group, b.brd_step, replyCount(b.brd_num) replyCount
+	    FROM board b, user1 u
+	    WHERE b.user_num = u.user_num
+	    AND b.brd_lg = 700
+	    AND b.brd_md = 102
+	    AND b.brd_step = 0
+	    ORDER BY like_cnt DESC
+	</select>
+    
+    
+    <select id="getRecentPosts" parameterType="String" resultType="Board">
+	    SELECT b.brd_num, u.user_num, b.title, b.conts, u.nick, b.img, b.view_cnt, b.reg_date, b.price, b.bank_info, b.bank_duedate, b.addr, b.applicants, b.participants, b.user_tel, count_like(b.brd_num) as like_cnt, b.brd_group, b.brd_step, replyCount(b.brd_num) replyCount
+	    FROM board b, user1 u
+	    WHERE b.user_num = u.user_num
+	    AND b.brd_lg = 700
+	    AND b.brd_md = 102
+	    AND b.brd_step = 0
+	    ORDER BY b.reg_date DESC
+	</select>
+
+	<insert id="commentSharing" parameterType="Board">
+	    INSERT INTO board (brd_num, user_num, brd_lg, brd_md, conts, reg_date,  brd_group, brd_step)
+	    VALUES (BRD_NUM_SEQ.nextval, #{user_num}, 700, 102, #{conts}, sysdate, #{brd_num}, 
+	           (SELECT COALESCE(MAX(brd_step), 0) + 1 FROM board WHERE brd_group = #{brd_group}))
+	</insert>    
+
+	<select id="listCommentSharing" resultType="Board" parameterType="int">
+		SELECT b.brd_num, b.user_num, b.conts, u.nick, b.reg_date, b.brd_step, b.brd_group, u.img
+		FROM board b, user1 u
+		Where b.brd_group = #{brd_num}
+		AND b.user_num = u.user_num
+		AND b.brd_lg = 700
+		AND b.brd_md = 102
+		AND b.brd_step>0
+		ORDER BY b.reg_date DESC
+	</select>
+
+	<update id="commentUpdateSharing" parameterType="Board">
+		UPDATE board SET conts=#{conts}
+		WHERE  user_num = #{user_num} 
+		AND    brd_num =#{brd_num}
+	</update>
+
+	<delete id="commentDeleteSharing" parameterType="Board">
+		DELETE FROM board
+		WHERE user_num = #{user_num} 
+		AND brd_num = #{brd_num}
+	</delete>
+	
+	<select id="commentCountSharing" parameterType="int" resultType="int">
+		SELECT count(*)
+		FROM  board
+		WHERE brd_group =#{brd_num}
+		AND brd_md = 102
+		AND brd_lg = 700
+		AND brd_step >0
+
+	</select>
+	
+	
+	<select id="sharingResult" parameterType="int" resultType="Board">
+		Select *
+		From board
+		Where user_num = #{user_num}
+		Order By srch_date	DESC
+	</select>
+	
+</mapper>
+

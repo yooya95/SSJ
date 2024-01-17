@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oracle.S202350102.JkUser1Mapper">
+
+	<update id="updateUser1" parameterType="User1">
+	    UPDATE user1
+	    SET nick = #{nick},
+	        user_name = #{user_name},
+	        email = #{email},
+	        birth = #{birth}, 
+	        addr = #{addr},
+	        tel = #{tel}
+	        <if test="img != null">
+            , img = #{img}
+        </if>
+	    WHERE user_id = #{user_id}
+	</update>
+
+
+    <select id="loginUser" parameterType="User1" resultType="User1">
+        SELECT * FROM user1 WHERE user_id = #{user_id} AND user_pswd = #{user_pswd}
+    </select>
+    
+ 	<select id="getUserDetails" parameterType="User1" resultType="User1">
+        SELECT * FROM user1 WHERE user_id = #{user_id}
+    </select>
+ 
+ 	<update id="updateProfile" parameterType="User1">
+	    UPDATE user1
+	    SET    img = #{img}
+	    WHERE user_num = #{user_num}
+	</update>     
+      
+	<select id="followingCnt" resultType="java.util.Map" parameterType="map">
+	    <![CDATA[
+        SELECT cnt_following(#{user_num}) as following_cnt, cnt_follower(#{user_num}) as follower_cnt FROM dual
+        
+    ]]>
+	</select>
+
+	<select id="myBoard" parameterType="Board" resultType="int">
+	  	Select Count(*)
+		From board
+		Where user_num = #{user_num}
+   		and brd_step = 0
+        and brd_md > 0
+	</select>
+
+</mapper>
+

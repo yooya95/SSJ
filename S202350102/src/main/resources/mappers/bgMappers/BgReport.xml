@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oracle.S202350102.BgReport">
+
+	<select id="selectReportRecord" parameterType="report" resultType="int">
+		SELECT  COUNT(Report_id)
+	    FROM    report
+	    WHERE   brd_num = #{brd_num} 
+	    AND		user_num = #{user_num}
+	</select>
+	
+	
+	<select id="selectCnt" parameterType="report" resultType="int">
+		SELECT  cnt
+	    FROM    report
+	    WHERE   brd_num = #{brd_num} 
+	    AND		user_num = #{user_num}
+	</select>
+	
+	
+	<insert id="insertReport" parameterType="report">
+		INSERT INTO report(report_id,   user_num,		brd_num,	REPORT_DATE,	REPORT_LG,	CTG_LG,	cnt,	STATE_LG,   STATE_MD)
+        VALUES (REPORT_ID_SEQ.Nextval,  #{user_num},	#{brd_num},	sysdate,		500,		800,	10,		300,        100)
+	</insert>
+
+	<select id="recordANDCnt" parameterType="report" resultType="report">
+		SELECT  cnt, COUNT(Report_id) As burningRecord
+	    FROM    report
+	    WHERE   brd_num = #{brd_num} 
+	    AND		user_num = #{user_num}
+	</select>
+	
+	
+	<update id="cancelCnt" parameterType="report">
+		UPDATE	report
+		SET		cnt = 0
+		WHERE   brd_num = #{brd_num} 
+	    AND		user_num = #{user_num}
+	</update>
+	
+	
+	<update id="undoCnt" parameterType="report">
+		UPDATE	report
+		SET		cnt = 10
+		WHERE   brd_num = #{brd_num} 
+	    AND		user_num = #{user_num}
+	</update>
+	
+	
+	<select id="reportTotal" resultType="int">
+		select count(*)
+		from report
+	</select>
+	
+	
+	<select id="totalSearchReport" parameterType="report" resultType="int">
+		Select	Count(*)
+		From	report r
+				<if test="searchType == 'reporter_id'">, user1 u2</if>
+		<where>
+			<choose>
+				<when test="searchType == 'brd_num'">
+			        brd_num = #{keyword}
+				</when>
+				<when test="searchType == 'reporter_id'">
+	        				r.user_num = u2.user_num
+					And     u2.user_id = '${keyword}'
+				</when>
+				<when test="searchType == 'report_date'">
+			        		r.report_date   
+			        BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+			        And     TO_DATE(#{endDate}, 'YYYY-MM-DD') + INTERVAL '1' DAY
+				</when>
+			</choose>
+		</where>
+	</select>
+	
+	
+	<select id="bgReportBoardAll" resultType="report">
+		Select *
+		From
+			(Select rownum rn, a.*
+			From
+				(Select  r.report_id, r.report_date, b.title, b.conts, b.img, b.reg_date, r.brd_num
+					  , r.cnt
+					  , u1.img			As user_img
+				      , c.ctn			<!-- 공통 코드 분류 -->
+				      , u1.user_name    As reported_name	<!-- 신고 당한 회원 이름 -->
+				      , u1.user_id      As reported_id		<!-- 신고 당한 회원 아이디 -->
+				      , u1.nick         As reported_nick	<!-- 신고 당한 회원 닉네임 -->
+				      , u2.user_name    As reporter_name	<!-- 신고한 회원 이름 -->
+				      , u2.user_id      As reporter_id		<!-- 신고한 회원 아이디 -->
+				      , u2.nick         As reporter_nick	<!-- 신고한 회원 닉네임 -->
+				From    report r, board b, comm c, user1 u1, user1 u2
+				Where   r.brd_num = b.brd_num
+				And     b.brd_lg = 700		<!-- 게시판 종류에 있는 것만 가져오기 위해서 -->
+				And     b.brd_lg = c.lg
+				And     b.brd_md = c.md
+				And     b.user_num = u1.user_num
+				And     r.user_num = u2.user_num
+				<choose>
+						<when test="searchType == 'brd_num'">
+							And r.brd_num = #{keyword}
+						</when>
+						<when test="searchType == 'reporter_id'">
+							And	u2.user_id = '${keyword}'
+						</when>
+						<when test="searchType == 'report_date'">
+					        AND		r.report_date   
+							        BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+							        And     TO_DATE(#{endDate}, 'YYYY-MM-DD') + INTERVAL '1' DAY
+						</when>
+				</choose>
+				Order By    r.report_id desc) a
+				)
+		Where   rn  Between #{start}   
+					And		#{end}
+	</select>
+	
+	
+	<update id="resetReportCnts" parameterType="java.util.List">
+		Update  report
+		Set     cnt = 0
+		Where   report_id IN
+		<foreach  item="item" collection="list" open=" (" separator="," close=")" >
+			#{item.report_id}
+		</foreach>
+	</update>
+	
+	
+	
+	
+	<!-- 폐기된 mapper들 -->
+	
+	<update id="updateCnt" parameterType="report">
+		UPDATE	report
+		<choose>
+			<when test="cnt == 10">
+				SET	cnt = 0
+			</when>
+			<when test="cnt == 0">
+				SET	cnt = 10
+			</when>
+		</choose>
+		WHERE   brd_num = #{brd_num} 
+	    AND		user_num = #{user_num}
+	</update>
+
+</mapper>

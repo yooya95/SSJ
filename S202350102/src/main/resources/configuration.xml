@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config
+3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<!--db연동 sql 작성을 위한 셋팅  -->
+<configuration>
+	<typeAliases>
+		<typeAlias alias="BadWord"     	 	type="com.oracle.S202350102.dto.BadWord"/> 
+		<typeAlias alias="Board"   	     	type="com.oracle.S202350102.dto.Board"/> 
+		<typeAlias alias="BoardLike"     	type="com.oracle.S202350102.dto.BoardLike"/> 
+		<typeAlias alias="BoardReChk"    	type="com.oracle.S202350102.dto.BoardReChk"/> 
+		<typeAlias alias="Challenge"     	type="com.oracle.S202350102.dto.Challenge"/> 
+		<typeAlias alias="Challenger"    	type="com.oracle.S202350102.dto.Challenger"/> 
+		<typeAlias alias="ChallengPick"  	type="com.oracle.S202350102.dto.ChallengPick"/> 
+		<typeAlias alias="Comm"   		 	type="com.oracle.S202350102.dto.Comm"/> 
+		<typeAlias alias="Follower"   	 	type="com.oracle.S202350102.dto.Follower"/> 
+		<typeAlias alias="Following"   	 	type="com.oracle.S202350102.dto.Following"/> 
+		<typeAlias alias="Level1"   	 	type="com.oracle.S202350102.dto.Level1"/> 
+		<typeAlias alias="LocationCode"  	type="com.oracle.S202350102.dto.LocationCode"/> 
+		<typeAlias alias="MapList"   	 	type="com.oracle.S202350102.dto.MapList"/> 
+		<typeAlias alias="MemberShip"    	type="com.oracle.S202350102.dto.MemberShip"/> 
+		<typeAlias alias="Message"   	 	type="com.oracle.S202350102.dto.Message"/> 
+		<typeAlias alias="Order1"   	 	type="com.oracle.S202350102.dto.Order1"/> 
+		<typeAlias alias="Refund"   	 	type="com.oracle.S202350102.dto.Refund"/> 
+		<typeAlias alias="Report"   	 	type="com.oracle.S202350102.dto.Report"/> 
+		<typeAlias alias="SearchHistory" 	type="com.oracle.S202350102.dto.SearchHistory"/> 
+		<typeAlias alias="SharingList"   	type="com.oracle.S202350102.dto.SharingList"/> 
+		<typeAlias alias="User1"   	     	type="com.oracle.S202350102.dto.User1"/>
+		<typeAlias alias="UserLevel"   	 	type="com.oracle.S202350102.dto.UserLevel"/>
+		<typeAlias alias="KakaoPayCancelVO"	type="com.oracle.S202350102.dto.KakaoPayCancelVO"/>
+	</typeAliases>
+</configuration>

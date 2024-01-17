@@ -1,0 +1,167 @@
+@font-face {
+    font-family: 'SUIT-Regular';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+.qbd-main {
+    width: 100%; height: 100%;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 0 solid red;
+}
+.qbd-main > .qbd-mainbody{
+	width: 100%; height: 100%;
+	border: 0 solid red; margin: auto;
+}
+
+.qbd-main > .qbd-mainbody >.qbd-title {
+    width: 1000px; height: 150px;
+    display: flex;
+    border: 0 solid red;
+    margin: auto;
+    position: relative;
+}
+.qbd-main > .qbd-mainbody >.qbd-title > .qbd-object{
+	display: flex; justify-content: end; align-items: end;
+	border: 0 solid black; width: 200px; margin-right: 0px;
+	position: absolute; right: 0px; bottom: 0px;
+}
+.qbd-main > .qbd-mainbody >.qbd-title > .qbd-title-content {
+	display: flex; align-items: center; justify-content: start;
+	width: 500px; border: 0 solid red;
+}
+.qbd-main > .qbd-mainbody > .qbd-line {
+	width: 1000px; margin-left: 50px;
+	display: inline-grid; align-items: center; 
+	justify-content: center;
+}
+.qbd-line-li {
+	height: 2px; background: black;
+}
+.qbd-main > .qbd-mainbody > .qbd-line > .qbd-line-box {
+	width: 500px;
+}
+
+.qbd-line-box-text {
+	font-size: 0.8em; font-weight: 500;
+}
+.qbd-content {
+	width: 100%; height: 100%;
+    border: 0 solid black;
+	margin: auto;
+	display: flex;
+	overflow: auto;
+	margin-top: 20px;
+}
+.qbd-content span {
+    white-space: pre-wrap;
+    overflow: hidden;
+}
+.title-text {
+	margin-left: 30px; margin-top: 20px; font-size: 1.8em; font-weight: bold;
+}
+.qbd-title a {
+    margin-right: 10px;
+    color: #d6492c;
+    
+}
+
+.qbd-title a:hover {
+    color: #d6492c; opacity: 0.7;
+}
+
+.qbd-content {
+    margin-bottom: 20px;
+}
+.qbd-main > .qbd-mainbody > .qbd-rp {
+	width: 100%; margin: 0 auto; border-radius: 30px;
+}
+.qbd-rp-write form[name="boardTrans"] {
+	display: flex; align-items: start; justify-content: start;
+    margin-left: 100px; margin-top: 30px;
+}
+.qbd-rp-write textarea {
+    width: 650px;
+    padding: 10px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    border-radius: 20px;
+}
+
+.qbd-rp-write input[type="button"] {
+    background-color: #ff8a8d;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer; height: 82px; margin-top: 5px; margin-left: 0px;
+    border-radius: 12px;
+}
+
+.qbd-rp-write input[type="button"]:hover {
+    opacity: 0.7; transition: 0.2s all;
+}
+
+.qbd-rp-list {
+    list-style: none;
+    padding: 0;
+    width: 800px; margin-left: 50px;
+}
+.qbd-rp-list ul {
+	margin-left: 18px;
+}
+
+.qbd-rp-group li {
+	white-space: pre-wrap;
+	overflow: auto;
+}
+
+.comment_item {
+    border: 1px solid #8c8c8c;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #fff;
+    width: 90%;
+}
+.comment_item span {
+    display: inline-block;
+    max-height: 140px;
+    overflow: hidden;
+}
+
+.comment_info {
+	margin: auto;
+}
+
+.comment_info button {
+    background: none;
+    border: none;
+    color: #ff7d81;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.comment_info button:hover {
+    color: #ff7d81; opacity: 0.7; transition: 0.2s all;
+}
+.updateArea {
+	width: 100%; height: 100px;
+}
+.saveBtn, .cancelBtn {
+    color: #ff7d81;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.saveBtn:hover, .cancelBtn:hover {
+    opacity: 0.7; transition: 0.2s all;
+}
+ul{
+   list-style:none;
+}
+

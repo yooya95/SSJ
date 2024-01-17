@@ -1,0 +1,79 @@
+@font-face {
+    font-family: 'SUIT-Regular';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+#modalOpenBtn, #modalCloseBtn {
+  cursor: pointer;
+}
+.extra_box {
+    display: flex; align-items: center; justify-content: center;
+}
+#modalOpenBtn {
+  font-size: 16px;
+  color: #59a5d2;
+  border: none;
+}
+
+#levelInfoBtn {
+  font-size: 16px;
+  color: #59a5d2;
+  border: none;
+}
+
+#modalCloseBtn {
+    border: 0 solid black; position: absolute; top: 10px; right: 20px;
+}	
+
+#modalContainer {
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+#modalContainer > #modalContent {
+  z-index: 5;
+  position: absolute;
+  background-color: #ffffff;
+  width: 530px;
+  height: 730px;
+  padding: 15px;
+}
+
+#modalContainer,
+#level_info_container {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#levelInfoBtn {
+	margin-top: 50px;
+	margin-bottom: 10px;
+}
+.userInfoBox1{
+	border: 0px solid red; height: 50px;
+	display: flex; justify-content: center; align-items: center;
+    margin-top: 40px;
+}
+
+.userInfoBox2 {
+	height: 50px;
+	border: 0px solid red; text-align: center;
+	display: flex; align-items: center;
+}
+.userInfoBox2 > .user_exp {
+	margin-right: 330px;
+}

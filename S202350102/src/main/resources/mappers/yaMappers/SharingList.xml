@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oracle.S202350102.SharingListMapper">
+
+	<insert id="YaSharingSave" parameterType="SharingList" >
+	    INSERT INTO sharingList (brd_num, user_num, reg_date, state_lg, state_md, reject_msg, message)
+	    VALUES (#{brd_num}, #{user_num}, sysdate, 300,100,'', #{message})
+	</insert>
+	
+    <select id="sharingParticipantsInfo" parameterType="int" resultType="sharingList"> 	
+		SELECT b.brd_num, b.participants, u.nick, u.user_name, u.tel, u.addr, s.message, s.reg_date, s.user_num, b.applicants, s.state_md
+ 		FROM   sharingList s, user1 u, board b
+ 		WHERE  b. brd_num = #{brd_num} and s.brd_num = #{brd_num}
+        AND s.user_num = u.user_num
+ 		AND brd_lg = 700
+ 		AND brd_md = 102
+ 		AND brd_step = 0 
+    </select>		
+    
+	<select id="YaMyJoinSharingList" parameterType="sharingList" resultType="sharingList">
+		SELECT *
+		FROM (
+		    SELECT ROWNUM AS r, a.*
+		    FROM (
+		        SELECT s.brd_num, b.title, s.state_md, s.reject_msg
+		        FROM sharingList s
+		        INNER JOIN board b ON s.brd_num = b.brd_num
+		        WHERE s.user_num = #{user_num}
+		        ORDER BY s.brd_num DESC
+		    ) a
+		)
+WHERE r BETWEEN #{start} AND #{end}
+	</select>	
+    
+	<update id="YaSharingConfirm" parameterType="sharingList">
+		UPDATE sharingList
+		SET	   state_md =101
+		WHERE  brd_num = #{brd_num}
+		AND    user_num = #{user_num}
+	</update>
+	
+	<update id="YasharingReject" parameterType="sharingList">
+	    UPDATE sharingList
+		SET	   state_md =104, reject_msg = #{reject_msg}
+		WHERE  brd_num = #{brd_num}
+		AND    user_num = #{user_num}	
+	</update>
+		
+	<select id="YaJoinSharing" parameterType="int" resultType="int">
+		SELECT count(*)
+		FROM sharingList
+		WHERE user_num = #{user_num}	
+	</select>
+	
+	<select id="YaSharingChk" parameterType="int" resultType="int">
+                select user_num
+                from sharingList
+                where brd_num = #{brd_num}	    
+	</select>	
+	
+	<select id="YaDeleteSharing" parameterType="int"> 
+		DELETE FROM sharingList
+		WHERE brd_num = #{brd_num}
+		AND user_num = #{user_num}	
+	</select>
+	
+	
+</mapper>	

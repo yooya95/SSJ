@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oracle.S202350102.BgBoard">
+
+	<select id="bgChgDetail" parameterType="int" resultType="Challenge">
+		Select u.nick, c1.ctn ctn, c2.ctn stateCtn, ch.*
+		From challenge ch
+		Inner Join user1 u On ch.user_num = u.user_num
+		Inner Join comm c1 On ch.chg_lg = c1.lg And ch.chg_md = c1.md
+		Inner Join comm c2 On ch.state_lg = c2.lg And ch.state_md = c2.md
+		Where ch.chg_id = #{chg_id}
+		
+	</select>
+
+	
+	<select id="bgCertBoardAll" parameterType="Board" resultType="Board">
+	<![CDATA[
+		Select Rownum As rn, b.*
+		FROM	(
+		        Select b.*, u.nick, u.img as user_img, replyCount(b.brd_num) replyCount,
+		                count_like(b.brd_num) as like_cnt
+		                ,TOGGLE_BURNING_COUNT_FUNCTION2(b.brd_num) as report_cnt
+		                , (SELECT 	COUNT(*)
+		                   FROM   	board_like bl
+		                   WHERE 	bl.brd_num = b.brd_num
+		                   AND 		bl.user_num = #{b_user_num}
+		                  ) AS likeyn
+		                , (SELECT	SUM(cnt)
+		                   FROM		report r
+		                   WHERE	r.brd_num	= b.brd_num
+		                   AND		r.user_num	= #{b_user_num}
+		                   ) As myBurning
+		                , Row_Number() Over (Order By brd_group Desc, brd_step) As row_num
+		        From    board b
+		                INNER JOIN  user1 u On  b.user_num = u.user_num
+		        Where   brd_md	= 	100
+                and     brd_lg	=	700
+                and     chg_id	=	#{chg_id}
+                
+		        ) b
+		Where b.row_num Between #{start} 
+						And 	#{end}
+		]]>
+	</select>
+	
+	
+	<select id="bkCertBoard" parameterType="Board" resultType="Board">
+		select *
+		from board
+		where brd_lg=700 AND brd_md=100 AND brd_step=0
+	</select>
+	
+	
+	<insert id="insertCertBrd" parameterType="Board">
+		Insert Into board (BRD_NUM, title, conts, img, chg_id,   user_num, brd_step,
+		                   brd_lg,  brd_md, REG_DATE, BRD_GROUP)
+		        values     (BRD_NUM_SEQ.nextval, #{title}, #{conts}, #{img}, #{chg_id}, #{user_num}, 0,
+		                   700,      100,      sysdate, BRD_NUM_SEQ.currval)  
+	</insert>
+	
+	
+	<update id="updateCertBrd" parameterType="Board">
+		Update	board
+		Set		title = #{title}, 
+				conts = #{conts}
+				<if test="img != null">
+					,img = #{img}
+				</if>
+		Where	brd_num = #{brd_num}
+	</update>
+	
+	
+	<delete id="deleteCertBrd" parameterType="Board">
+		Delete From	board
+ 		<choose>
+ 			<when test="#{brd_num} == #{brd_group}">
+                Where	brd_group = #{brd_num}  
+  			</when>
+            <otherwise>
+  				Where	brd_num = #{brd_num}	
+	  			And    	brd_group = #{brd_group}           
+	  		</otherwise>
+		</choose>
+	</delete>
+	
+	
+	<select id="certTotal" parameterType="int" resultType="int">
+		Select		Count(*)
+		From		board b
+		Inner Join	challenge c On b.chg_id = c.chg_id
+		Where		brd_lg = 700
+		And			brd_md = 100
+		And			c.chg_id = #{chg_id}
+		And			brd_step = 0
+	</select>
+	
+	
+	<select id="commentInsert" parameterType="Board" statementType="CALLABLE">
+		{
+			call Challenge_Comment_Insert_Proc(
+						#{brd_num,		mode=IN,	jdbcType=INTEGER},
+						#{chg_id,		mode=IN,	jdbcType=INTEGER},
+						#{user_num,		mode=IN,	jdbcType=INTEGER},
+						#{title,		mode=IN,	jdbcType=VARCHAR},
+						#{conts,		mode=IN,	jdbcType=VARCHAR},
+						#{resultCount,	mode=OUT,	jdbcType=INTEGER}
+			)
+		}
+	</select>
+	
+	
+	<select id="srchCrtBdCnt" parameterType="board" resultType="int">
+		Select  Count(*)
+		From    (Select rownum  rn, a.*
+		         From   (Select b.*, u.nick
+		                 From   board b
+		                 Inner Join user1 u On  b.user_num = u.user_num
+		                 Where  brd_md  =   100
+		                 And    brd_lg  =   700
+		                 And    chg_id  =   #{chg_id}
+						<choose>
+							<when test="searchType == 'title'">
+								And b.title Like '%' || #{keyword} || '%'
+							</when>
+							<when test="searchType == 'conts'">
+								And b.conts Like '%' || #{keyword} || '%'
+							</when>
+							<when test="searchType == 'nick'">
+								And nick 	Like '%' || #{keyword} || '%'
+							</when>
+							<when test="searchType == null"></when>
+						</choose>
+						<choose>
+							<when test="sortBy == 'newest'">
+								Order by   brd_group  Desc ,   brd_step 
+							</when>
+							<when test="sortBy == 'oldest'">
+								Order by   brd_group   ,   brd_step 
+							</when>
+							<when test="sortBy == null"></when>
+						</choose>
+		                 ) a
+		        )
+
+		
+	</select>
+	
+	<select id="searchCrtBd" parameterType="board" resultType="board">
+		Select  *
+		From    (Select rownum  rn, a.*
+		         From   (Select b.*, u.nick, u.img as user_img, replyCount(b.brd_num) replyCount
+		         		,count_like(b.brd_num) as like_cnt
+		                ,toggle_burning_count_function2(b.brd_num) as report_cnt
+		                ,(SELECT 	COUNT(*)
+				                   FROM   	board_like bl
+				                   WHERE 	bl.brd_num = b.brd_num
+				                   AND 		bl.user_num = 1
+				                  ) AS likeyn
+		                , (SELECT	SUM(cnt)
+		                   FROM		report r
+		                   WHERE	r.brd_num	= b.brd_num
+		                   AND		r.user_num	= 1
+		                   ) As myBurning
+		                 From   board b
+		                 Inner Join user1 u On  b.user_num = u.user_num
+		                 Where  brd_md  =   100
+		                 And    brd_lg  =   700
+		                 And    chg_id  =   #{chg_id}
+						<choose>
+							<when test="searchType == 'title'">
+								And b.title Like '%' || #{keyword} || '%'
+							</when>
+							<when test="searchType == 'conts'">
+								And b.conts Like '%' || #{keyword} || '%'
+							</when>
+							<when test="searchType == 'nick'">
+								And nick 	Like '%' || #{keyword} || '%'
+							</when>
+							<when test="searchType == null"></when>
+						</choose>
+						<choose>
+							<when test="sortBy == 'oldest'">
+								Order by   brd_group,   brd_step 
+							</when>
+							<when test="sortBy == 'newest' or sortBy == null">
+								Order by   brd_group  Desc,   brd_step 
+							</when>
+							<otherwise>
+								Order by   brd_group  Desc,   brd_step 
+							</otherwise>
+						</choose>
+		                 ) a
+		        )
+		Where   rn  Between #{start}   
+					And		#{end}
+	</select>
+	
+	
+	<select id="toggleBurningCountFunction" parameterType="Report" resultType="int" statementType="CALLABLE">
+		{
+			? = call Toggle_Burning_Count_Function(
+				 #{brd_num,		mode=IN,	jdbcType=INTEGER}
+				,#{user_num,	mode=IN,	jdbcType=INTEGER}
+			)
+		}
+	</select>
+	
+	
+</mapper>

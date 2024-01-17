@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oracle.S202350102.QBoardMapper">
+
+	<!-- 게시판 -->
+	<select id="qBoardList" parameterType="Board" resultType="Board">
+	  	SELECT b.* 
+	    FROM 
+	    (
+	      SELECT rownum rn, m.* 
+	      FROM  
+          (
+              SELECT b.brd_num, u.user_num, b.title, u.nick, b.reg_date, b.view_cnt, b.brd_md 
+              FROM   board b, user1 u 
+              WHERE  b.user_num = u.user_num 
+              <choose>
+              	<when test="status_md != 102">and u.user_num = #{user_num}</when>
+              	<otherwise></otherwise>
+              </choose>
+              AND    brd_lg = 400
+              AND    brd_step = 0
+              order  by b.reg_date desc
+           ) m
+        ) b     
+        WHERE rn BETWEEN #{start} AND #{end}
+        	    
+<!-- 	    SELECT *
+		FROM
+		(
+		        SELECT rownum rn , a.*
+		        FROM
+		        (select * from board where brd_lg = 400 order by reg_date) a
+		 )   
+ 		WHERE  rn BETWEEN #{start} and #{end}  -->
+	</select>
+	
+	<select id="qBoardSelect" parameterType="int" resultType="Board">
+		 SELECT  b.brd_num, b.title, u.nick, b.reg_date, b.conts, b.view_cnt, b.user_num, b.brd_md, b.img, b.reg_date, b.brd_group, b.brd_step
+    	 FROM board b, user1 u
+    	 Where brd_num = #{brd_num}
+    	 AND b.user_num = u.user_num
+	</select>
+	
+	<update id="qBoardUpdate" parameterType="Board">
+		UPDATE board 
+		SET brd_md = #{brd_md}, title = #{title}, conts = #{conts}, img = #{img}
+		WHERE brd_num = #{brd_num}
+	</update>
+	
+	<insert id="qBoardInsert" parameterType="Board">
+		INSERT INTO board 
+			(brd_num, brd_lg, brd_md, title, conts, reg_date, user_num, brd_group, brd_step, view_cnt, img) 
+		VALUES
+			(brd_num_seq.nextval, 400, #{brd_md}, #{title}, #{conts}, sysdate + interval '9' hour, #{user_num}, brd_num_seq.currval, 0, 0, #{img})
+	</insert>
+	
+	<delete id="qBoardDelete" parameterType="int">
+		DELETE Board 
+		WHERE brd_group = #{brd_num}
+	</delete>
+	
+	<update id="qReadCount" parameterType="int">
+		UPDATE Board 
+		SET view_cnt = view_cnt+1 
+		WHERE brd_num = #{brd_num}
+	</update>
+	
+	<select id="totalQBoard" parameterType="User1" resultType="int">
+		SELECT count(*)
+		FROM board 
+		where brd_lg = 400
+		AND   brd_step = 0
+ 		<choose>
+			<when test="status_md==102"></when>
+			<otherwise>
+				AND   user_num = #{user_num}
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	<!-- 검색 -->
+	<select id="qboardListSearch" parameterType="Board" resultType="Board">
+		SELECT b.* 
+	    FROM 
+	    (
+	      SELECT rownum rn, m.* 
+	      FROM  
+          (
+		SELECT  b.user_num, u.user_level, b.title, b.brd_num, l.req_exp, l.tot_exp, l.lv_name, u.user_exp, u.nick, b.reg_date, b.view_cnt, b.brd_md
+        FROM    board b ,user1 u, level1 l
+        WHERE   b.user_num = u.user_num
+        AND     u.user_level = l.user_level
+        AND     brd_lg = 400
+        <choose>
+        	<when test="category == 'user'">
+        		AND brd_md = 100
+        	</when>
+        	<when test="category == 'buggy'">
+        		AND brd_md = 101
+        	</when>
+        	<when test="category == 'challenge'">
+        		AND brd_md = 102
+        	</when>
+        	<when test="category == 'sharing'">
+        		AND brd_md = 103
+        	</when>
+        	<when test="category == 'follow'">
+        		AND brd_md = 104
+        	</when>
+        	<when test="category == 'suggest'">
+        		AND brd_md = 105
+        	</when>
+        	<otherwise></otherwise>
+        </choose>
+        AND     brd_step = 0
+        <if test="searchType == 'title'">AND title like '%' || #{keyword} || '%' </if>
+        <if test="searchType == 'conts'">AND conts like '%' || #{keyword} || '%' </if>
+        <if test="searchType == 'nick'">AND nick like '%' || #{keyword} || '%' </if>
+        ORDER BY b.reg_date DESC
+                   ) m
+        ) b
+        WHERE rn BETWEEN #{start} AND #{end}
+	</select>
+	
+	
+	<select id="qBoardSearchListCount" resultType="int" parameterType="Board">
+		SELECT count(*)
+		FROM    board b, user1 u
+		WHERE  brd_lg = 400
+        <choose>
+        	<when test="category == 'user'">
+        		AND brd_md = 100
+        	</when>
+        	<when test="category == 'buggy'">
+        		AND brd_md = 101
+        	</when>
+        	<when test="category == 'challenge'">
+        		AND brd_md = 102
+        	</when>
+        	<when test="category == 'sharing'">
+        		AND brd_md = 103
+        	</when>
+        	<when test="category == 'follow'">
+        		AND brd_md = 104
+        	</when>
+        	<when test="category == 'suggest'">
+        		AND brd_md = 105
+        	</when>
+        	<otherwise></otherwise>
+        </choose>
+		AND      brd_step = 0
+		AND      b.user_num = u.user_num 
+		<if test="searchType == 'title'">AND title like '%' || #{keyword} || '%' </if>
+        <if test="searchType == 'conts'">AND conts like '%' || #{keyword} || '%' </if>
+        <if test="searchType == 'nick'">AND nick like '%' || #{keyword} || '%' </if>
+	</select>
+	
+	<!-- 댓글 -->
+	<select id="qBoardCommentList" parameterType="Board" resultType="Board">
+		SELECT 		 brd_num, u.user_num,b.brd_lg, b.brd_md, u.nick, b.conts, b.reg_date, b.brd_group, b.brd_step
+		FROM   	      board b, user1 u
+		WHERE 		  brd_group = #{brd_group}
+        AND            b.user_num = u.user_num
+		AND			   brd_step > 0
+		ORDER BY    reg_date desc
+	</select>
+	
+	<insert id="qBoardCommentWrite" parameterType="Board">
+		INSERT INTO board
+			(brd_num, user_num, brd_lg, brd_md, conts, reg_date, brd_group, brd_step)
+		VALUES
+			(brd_num_seq.nextval, 
+			 #{user_num},
+			 400, 
+			 #{brd_md}, 
+			 #{conts}, 
+			 sysdate, 
+			 #{brd_group}, 
+			( 	
+				SELECT max(brd_step)+1
+				FROM board
+				WHERE brd_group = #{brd_group}
+			)
+		)
+	</insert>
+	
+	<update id="qBoardCommentUpdate" parameterType="Board">
+		UPDATE board
+		SET 		conts = #{conts}
+		WHERE brd_num = #{brd_num}
+	</update>
+	
+	<delete id="qBoardCommentDelete" parameterType="int">
+		DELETE board
+		WHERE brd_num = #{brd_num}
+	</delete>
+	
+</mapper>
